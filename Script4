@@ -1,0 +1,191 @@
+4. Law Enforcement Tools (Handcuffs, Radar Gun, MDT)
+
+These tools will help officers in your North LA Roblox game enforce the law.
+
+
+---
+
+🔹 Handcuffs System
+
+✅ Arrest criminals & teleport them to jail
+✅ Restricts their movement
+
+🔹 Tool Setup in Explorer:
+
+1. In StarterPack, create a Tool (Rename it to "Handcuffs").
+
+
+2. Inside the Tool, add a LocalScript and a RemoteEvent (Rename it "ArrestEvent").
+
+
+3. Add a ServerScript inside ServerScriptService (Handles arrests).
+
+
+
+
+---
+
+🔹 Local Script (Handcuff Tool)
+
+Place this inside the Handcuffs Tool
+
+local tool = script.Parent
+local remote = tool:FindFirstChild("ArrestEvent")
+
+tool.Activated:Connect(function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local target = player:GetMouse().Target
+    
+    if target and target.Parent and game.Players:GetPlayerFromCharacter(target.Parent) then
+        local targetPlayer = game.Players:GetPlayerFromCharacter(target.Parent)
+        remote:FireServer(targetPlayer)
+    end
+end)
+
+
+---
+
+🔹 Server Script (Arrest Handling)
+
+Place this inside ServerScriptService
+
+local remote = game.ReplicatedStorage:FindFirstChild("ArrestEvent") or Instance.new("RemoteEvent", game.ReplicatedStorage)
+remote.Name = "ArrestEvent"
+
+local JAIL_POSITION = Vector3.new(0, 10, 0)  -- Change this to your jail location
+
+remote.OnServerEvent:Connect(function(player, targetPlayer)
+    if targetPlayer and targetPlayer.Character then
+        local char = targetPlayer.Character
+        if char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(JAIL_POSITION)
+            print(targetPlayer.Name .. " has been arrested!")
+        end
+    end
+end)
+
+
+---
+
+🔹 Radar Gun System
+
+✅ Measures a vehicle’s speed
+✅ Displays speed in a GUI
+
+🔹 Tool Setup in Explorer:
+
+1. In StarterPack, create a Tool (Rename it to "RadarGun").
+
+
+2. Inside the Tool, add a RemoteEvent (Rename it "CheckSpeed").
+
+
+3. Inside StarterGui, add a TextLabel (Displays speed).
+
+
+
+
+---
+
+🔹 Local Script (Radar Gun)
+
+Place this inside the RadarGun Tool
+
+local tool = script.Parent
+local remote = tool:FindFirstChild("CheckSpeed")
+
+tool.Activated:Connect(function()
+    local player = game.Players.LocalPlayer
+    local target = player:GetMouse().Target
+
+    if target and target.Parent:FindFirstChild("HumanoidRootPart") then
+        remote:FireServer(target.Parent)
+    end
+end)
+
+
+---
+
+🔹 Server Script (Speed Calculation)
+
+Place this inside ServerScriptService
+
+local remote = game.ReplicatedStorage:FindFirstChild("CheckSpeed") or Instance.new("RemoteEvent", game.ReplicatedStorage)
+remote.Name = "CheckSpeed"
+
+remote.OnServerEvent:Connect(function(player, target)
+    if target and target:FindFirstChild("HumanoidRootPart") then
+        local speed = target.HumanoidRootPart.Velocity.Magnitude * 2
+        print("Speed: " .. math.floor(speed) .. " MPH")
+    end
+end)
+
+
+---
+
+🔹 MDT (Mobile Data Terminal) System
+
+✅ Check wanted levels of criminals
+✅ Displays info in a GUI
+
+🔹 GUI Setup in Explorer:
+
+1. In StarterGui, create a ScreenGui (Rename it "MDTGui").
+
+
+2. Inside the ScreenGui, add a Frame and a TextLabel (Displays criminal info).
+
+
+3. Inside StarterPack, create a Tool (Rename it "MDT").
+
+
+4. Inside the MDT Tool, add a LocalScript and a RemoteEvent (Rename it "CheckCriminal").
+
+
+
+
+---
+
+🔹 Local Script (MDT System)
+
+Place this inside the MDT Tool
+
+local tool = script.Parent
+local remote = tool:FindFirstChild("CheckCriminal")
+local gui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("MDTGui")
+
+tool.Activated:Connect(function()
+    gui.Enabled = true
+    local player = game.Players.LocalPlayer
+    local target = player:GetMouse().Target
+
+    if target and target.Parent and game.Players:GetPlayerFromCharacter(target.Parent) then
+        remote:FireServer(game.Players:GetPlayerFromCharacter(target.Parent))
+    end
+end)
+
+
+---
+
+🔹 Server Script (Check Wanted Levels)
+
+Place this inside ServerScriptService
+
+local remote = game.ReplicatedStorage:FindFirstChild("CheckCriminal") or Instance.new("RemoteEvent", game.ReplicatedStorage)
+remote.Name = "CheckCriminal"
+
+local WANTED_PLAYERS = {  -- Example list of criminals
+    ["CriminalUser1"] = "Robbery",
+    ["CriminalUser2"] = "Murder"
+}
+
+remote.OnServerEvent:Connect(function(player, targetPlayer)
+    if targetPlayer then
+        local crime = WANTED_PLAYERS[targetPlayer.Name] or "No Record"
+        print(targetPlayer.Name .. " is wanted for: " .. crime)
+    end
+end)
+
+
+---
