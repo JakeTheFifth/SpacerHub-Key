@@ -1,0 +1,14 @@
+local remote = game.ReplicatedStorage:FindFirstChild("CheckCriminal") or Instance.new("RemoteEvent", game.ReplicatedStorage)
+remote.Name = "CheckCriminal"
+
+local WANTED_PLAYERS = {  -- Example list of criminals
+    ["CriminalUser1"] = "Robbery",
+    ["CriminalUser2"] = "Murder"
+}
+
+remote.OnServerEvent:Connect(function(player, targetPlayer)
+    if targetPlayer then
+        local crime = WANTED_PLAYERS[targetPlayer.Name] or "No Record"
+        print(targetPlayer.Name .. " is wanted for: " .. crime)
+    end
+end)
