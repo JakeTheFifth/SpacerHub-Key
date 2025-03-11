@@ -1,0 +1,110 @@
+🔹 Jailing System
+
+When a player reaches a high enough wanted level, they’ll be sent to jail for a specified amount of time. Players can pay bail to escape early.
+
+🔹 Server Script (Jailing System)
+
+Place this inside ServerScriptService
+
+local JAIL_POSITION = Vector3.new(0, 10, 0)  -- Define jail location
+local BAIL_AMOUNT = 500  -- Bail amount to escape jail
+
+local function jailPlayer(player, sentence)
+    local character = player.Character
+    if character then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            -- Move player to jail position
+            humanoidRootPart.CFrame = CFrame.new(JAIL_POSITION)
+            -- Set up the timer
+            player:SetAttribute("JailTimeRemaining", sentence)
+            print(player.Name .. " has been jailed for " .. sentence .. " minutes.")
+        end
+    end
+end
+
+local function checkJailTime()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player:GetAttribute("JailTimeRemaining") then
+            local timeRemaining = player:GetAttribute("JailTimeRemaining")
+            if timeRemaining > 0 then
+                player:SetAttribute("JailTimeRemaining", timeRemaining - 1)
+            else
+                -- Release player from jail when time is up
+                local character = player.Character
+                if character then
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        humanoidRootPart.CFrame = CFrame.new(0, 50, 0)  -- Spawn point or previous location
+                    end
+                end
+                print(player.Name .. " has been released from jail.")
+            end
+        end
+    end
+end
+
+-- Trigger when a player reaches a certain wanted level
+game.ReplicatedStorage.CrimeCommitted.OnServerEvent:Connect(function(player, crime)
+    if crime == "BankRobbery" then
+        jailPlayer(player, 5)  -- Jail for 5 minutes
+    end
+end)
+
+-- Check for jail time every minute
+while true do
+    wait(60)
+    checkJailTime()
+end
+
+
+---
+
+🔹 Bail System
+
+Players can pay bail to reduce their jail sentence or escape early.
+
+🔹 Bail GUI (Local Script)
+
+Place this inside StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local bailAmount = 500  -- Bail amount
+
+local function showBailUI()
+    -- Create a simple GUI to show Bail amount and option to pay
+    local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+    local frame = Instance.new("Frame", screenGui)
+    frame.Size = UDim2.new(0.3, 0, 0.2, 0)
+    frame.Position = UDim2.new(0.35, 0, 0.4, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+    local textLabel = Instance.new("TextLabel", frame)
+    textLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    textLabel.Text = "Bail Amount: " .. bailAmount .. " Credits"
+    
+    local bailButton = Instance.new("TextButton", frame)
+    bailButton.Size = UDim2.new(1, 0, 0.5, 0)
+    bailButton.Position = UDim2.new(0, 0, 0.5, 0)
+    bailButton.Text = "Pay Bail"
+    
+    bailButton.MouseButton1Click:Connect(function()
+        if player.leaderstats.Credits.Value >= bailAmount then
+            player.leaderstats.Credits.Value = player.leaderstats.Credits.Value - bailAmount
+            player:SetAttribute("JailTimeRemaining", 0)  -- Release player
+            screenGui:Destroy()
+            print(player.Name .. " has paid bail and is released from jail.")
+        else
+            print("Insufficient credits for bail.")
+        end
+    end)
+end
+
+-- Trigger Bail UI if player is in jail
+game:GetService("Players").PlayerAdded:Connect(function(player)
+    player:GetAttributeChangedSignal("JailTimeRemaining"):Connect(function()
+        if player:GetAttribute("JailTimeRemaining") > 0 then
+            showBailUI()
+        end
+    end)
+end)
