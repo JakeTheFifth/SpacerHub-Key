@@ -1,0 +1,124 @@
+🔹 Gang Creation & Management
+
+🔹 Server Script (Gang Creation & Management)
+
+This handles the creation of gangs, assigning players, and checking the gang’s turf.
+
+local GANGS = {}  -- Stores gang data: {GangName, GangLeader, Members}
+
+local function createGang(player, gangName)
+    if GANGS[gangName] then
+        return "This gang already exists."
+    else
+        GANGS[gangName] = {Leader = player, Members = {player}}
+        return gangName .. " gang created successfully!"
+    end
+end
+
+local function joinGang(player, gangName)
+    if not GANGS[gangName] then
+        return "This gang does not exist."
+    else
+        table.insert(GANGS[gangName].Members, player)
+        return "You have joined the " .. gangName .. " gang!"
+    end
+end
+
+local function leaveGang(player, gangName)
+    local gang = GANGS[gangName]
+    if gang then
+        for i, member in ipairs(gang.Members) do
+            if member == player then
+                table.remove(gang.Members, i)
+                return player.Name .. " has left the gang."
+            end
+        end
+        return "You are not part of this gang."
+    end
+end
+
+game.ReplicatedStorage.GangActions.OnServerEvent:Connect(function(player, action, gangName)
+    if action == "Create" then
+        print(createGang(player, gangName))
+    elseif action == "Join" then
+        print(joinGang(player, gangName))
+    elseif action == "Leave" then
+        print(leaveGang(player, gangName))
+    end
+end)
+
+
+---
+
+🔹 Turf Wars (Territory Control)
+
+Players can capture and defend territories controlled by gangs.
+
+Turf Points give special rewards like cash or gang bonuses.
+
+
+🔹 Server Script (Turf Control)
+
+This script manages the territories and controls which gang owns them.
+
+local TERRITORIES = {
+    [1] = {name = "Downtown", owner = nil, captureTime = 0},  -- No owner initially
+    [2] = {name = "Airport", owner = nil, captureTime = 0},
+}
+
+local function captureTerritory(player, territoryID)
+    local territory = TERRITORIES[territoryID]
+    if territory then
+        if not territory.owner then
+            territory.owner = player
+            print(player.Name .. " has captured " .. territory.name)
+            return "You have captured " .. territory.name .. "!"
+        elseif territory.owner == player then
+            return "You already control this territory."
+        else
+            territory.owner = player
+            print(player.Name .. " has captured " .. territory.name)
+            return "You have captured " .. territory.name .. " from the previous gang."
+        end
+    end
+end
+
+game.ReplicatedStorage.TurfCapture.OnServerEvent:Connect(function(player, territoryID)
+    print(captureTerritory(player, territoryID))
+end)
+
+
+---
+
+🔹 Local Script (Gang GUI & Turf Wars)
+
+This will allow players to view and interact with gang and turf systems via a GUI.
+
+local player = game.Players.LocalPlayer
+local gangUI = player.PlayerGui:WaitForChild("GangGUI")
+local turfUI = player.PlayerGui:WaitForChild("TurfGUI")
+local gangNameBox = gangUI:WaitForChild("GangNameBox")
+local joinButton = gangUI:WaitForChild("JoinButton")
+local createButton = gangUI:WaitForChild("CreateButton")
+local turfList = turfUI:WaitForChild("TurfList")
+
+createButton.MouseButton1Click:Connect(function()
+    local gangName = gangNameBox.Text
+    game.ReplicatedStorage.GangActions:FireServer("Create", gangName)
+end)
+
+joinButton.MouseButton1Click:Connect(function()
+    local gangName = gangNameBox.Text
+    game.ReplicatedStorage.GangActions:FireServer("Join", gangName)
+end)
+
+-- Display Turf Wars info
+for id, territory in pairs(game.ReplicatedStorage.TERRITORIES:GetChildren()) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Text = territory.Name .. " - Owned by: " .. (territory.owner and territory.owner.Name or "None")
+    button.Parent = turfList
+    button.MouseButton1Click:Connect(function()
+        game.ReplicatedStorage.TurfCapture:FireServer(id)
+    end)
+end
