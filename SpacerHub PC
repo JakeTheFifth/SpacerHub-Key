@@ -1,0 +1,133 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+if PlaceId == 4924922222 then do
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("SpacerHub - Brookhaven🏡 RP", "Synapse")
+Section:NewButton("Fly", "", function()
+    local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local flying = false
+local velocity
+
+local function toggleFly()
+    flying = not flying
+    if flying then
+        velocity = Instance.new("BodyVelocity", hrp)
+        velocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        velocity.Velocity = Vector3.new(0, 0, 0)
+    else
+        if velocity then
+            velocity:Destroy()
+            velocity = nil
+        end
+    end
+end
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        toggleFly()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if flying and velocity then
+        local moveDir = Vector3.new(0, 0, 0)
+        if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + hrp.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - hrp.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - hrp.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + hrp.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+
+        if moveDir.Magnitude > 0 then
+            velocity.Velocity = moveDir.Unit * 50
+        else
+            velocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+Section:NewButton("Kick", "", function() local Players = game:GetService("Players")
+
+local kickPermission = { "player.Name" } -- Replace with the usernames of admins
+
+local function hasPermission(player)
+    for _, admin in pairs(kickPermission) do
+        if player.Name == player.Name then
+            return true
+        end
+    end
+    return false
+end
+
+Players.PlayerChatted:Connect(function(player, message)
+    if not hasPermission(player) then return end
+
+    local args = message:split(" ")
+    if args[1]:lower() == "!kick" and args[2] then
+        local targetPlayer = Players:FindFirstChild(args[2])
+        if targetPlayer then
+            targetPlayer:Kick("You have been kicked from the server.")
+        end
+    end
+end)
+Section:NewButton("Ban", "", function() local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local BanStore = DataStoreService:GetDataStore("BannedPlayers")
+
+local banPermission = { "player.Name" } -- Replace with admin usernames
+
+local function hasPermission(player)
+    for _, admin in pairs(banPermission) do
+        if player.Name == admin then
+            return true
+        end
+    end
+    return false
+end
+
+local function banPlayer(admin, playerName)
+    local targetPlayer = Players:FindFirstChild(playerName)
+    if targetPlayer then
+        BanStore:SetAsync(targetPlayer.UserId, true)
+        targetPlayer:Kick("You have been permanently banned.")
+    end
+end
+
+local function unbanPlayer(admin, playerName)
+    local userId
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Name == playerName then
+            userId = player.UserId
+            break
+        end
+    end
+
+    if userId then
+        BanStore:RemoveAsync(userId)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    local isBanned = BanStore:GetAsync(player.UserId)
+    if isBanned then
+        player:Kick("You are banned from this game.")
+    end
+end)
+
+Players.PlayerChatted:Connect(function(player, message)
+    if not hasPermission(player) then return end
+
+    local args = message:split(" ")
+    if args[1]:lower() == "!ban" and args[2] then
+        banPlayer(player, args[2])
+    elseif args[1]:lower() == "!unban" and args[2] then
+        unbanPlayer(player, args[2])
+    end
+end)
+Section:NewButton("Infinite Yield", "", function(loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))())
